@@ -113,6 +113,108 @@ public class CoreConfigV2rayServiceTests
     }
 
     [Test]
+    public async Task GenerateClientConfigContent_DialMode_ShouldFillProxySockopt()
+    {
+        var config = CoreConfigTestFactory.CreateConfig(ECoreType.Xray);
+        CoreConfigTestFactory.BindAppManagerConfig(config);
+        var node = CoreConfigTestFactory.CreateVmessNode(ECoreType.Xray);
+        node.DialMode = "code-1";
+        var context = CoreConfigTestFactory.CreateContext(config, node, ECoreType.Xray);
+
+        var result = new CoreConfigV2rayService(context).GenerateClientConfigContent();
+
+        await result.Success.Should().BeTrue();
+        var cfg = JsonUtils.Deserialize<V2rayConfig>(result.Data!.ToString())!;
+        var proxy = cfg.outbounds.First(o => o.tag == Global.ProxyTag);
+        await proxy.streamSettings!.sockopt!.dialMode.Should().BeEqualTo("code-1");
+    }
+
+    [Test]
+    public async Task GenerateClientConfigContent_DialModeWireGuard_ShouldFillSockopt()
+    {
+        // WireGuard has no transport, but Xray dials its endpoint through the system dialer
+        // with streamSettings.sockopt, so dialMode must reach that outbound too.
+        var config = CoreConfigTestFactory.CreateConfig(ECoreType.Xray);
+        CoreConfigTestFactory.BindAppManagerConfig(config);
+        var node = CoreConfigTestFactory.CreateWireguardNode(ECoreType.Xray);
+        node.DialMode = "code-1";
+        var context = CoreConfigTestFactory.CreateContext(config, node, ECoreType.Xray);
+
+        var result = new CoreConfigV2rayService(context).GenerateClientConfigContent();
+
+        await result.Success.Should().BeTrue();
+        var cfg = JsonUtils.Deserialize<V2rayConfig>(result.Data!.ToString())!;
+        var proxy = cfg.outbounds.First(o => o.tag == Global.ProxyTag);
+        await proxy.protocol.Should().BeEqualTo("wireguard");
+        await proxy.streamSettings!.sockopt!.dialMode.Should().BeEqualTo("code-1");
+    }
+
+    [Test]
+    public async Task GenerateClientConfigContent_DialModeWithFullConfigTemplate_ShouldKeepProxySockopt()
+    {
+        // A full config template replaces everything except the generated outbounds, which are copied
+        // into it verbatim, so dialMode set on the profile still reaches the final proxy outbound.
+        var config = CoreConfigTestFactory.CreateConfig(ECoreType.Xray);
+        CoreConfigTestFactory.BindAppManagerConfig(config);
+        var node = CoreConfigTestFactory.CreateVmessNode(ECoreType.Xray);
+        node.DialMode = "code-1";
+        var template = new FullConfigTemplateItem
+        {
+            Id = "t1",
+            Remarks = "template",
+            Enabled = true,
+            CoreType = ECoreType.Xray,
+            AddProxyOnly = true,
+            Config = """
+                {
+                  "log": { "loglevel": "warning" },
+                  "inbounds": [ { "tag": "socks-in", "port": 10808, "protocol": "socks" } ],
+                  "outbounds": [ { "tag": "direct", "protocol": "freedom" } ],
+                  "routing": { "rules": [ { "type": "field", "network": "tcp,udp", "outboundTag": "proxy" } ] }
+                }
+                """,
+        };
+        var context = CoreConfigTestFactory.CreateContext(config, node, ECoreType.Xray, fullConfigTemplate: template);
+
+        var result = new CoreConfigV2rayService(context).GenerateClientConfigContent();
+
+        await result.Success.Should().BeTrue();
+        var cfg = JsonUtils.Deserialize<V2rayConfig>(result.Data!.ToString())!;
+        var proxy = cfg.outbounds.First(o => o.tag == Global.ProxyTag);
+        await proxy.protocol.Should().BeEqualTo("vmess");
+        await proxy.streamSettings!.sockopt!.dialMode.Should().BeEqualTo("code-1");
+        await cfg.outbounds.Should().Contain(o => o.tag == "direct" && o.protocol == "freedom");
+        await cfg.inbounds.Should().Contain(i => i.tag == "socks-in");
+    }
+
+    [Test]
+    public async Task GenerateClientConfigContent_DialModeWithProxyChain_ShouldKeepDialerProxy()
+    {
+        // dialMode is merged into sockopt rather than replacing it, so the dialerProxy of the chain survives.
+        var config = CoreConfigTestFactory.CreateConfig(ECoreType.Xray);
+        CoreConfigTestFactory.BindAppManagerConfig(config);
+
+        var n1 = CoreConfigTestFactory.CreateSocksNode(ECoreType.Xray, "n1", "node-1");
+        var n2 = CoreConfigTestFactory.CreateSocksNode(ECoreType.Xray, "n2", "node-2");
+        n1.DialMode = "code-1";
+        n2.DialMode = "code-1";
+        var chain = CoreConfigTestFactory.CreateProxyChainNode(ECoreType.Xray, "c1", "chain", [n1.IndexId, n2.IndexId]);
+
+        var context = CoreConfigTestFactory.CreateContext(config, chain, ECoreType.Xray);
+        context.AllProxiesMap[n1.IndexId] = n1;
+        context.AllProxiesMap[n2.IndexId] = n2;
+        context.AllProxiesMap[chain.IndexId] = chain;
+
+        var result = new CoreConfigV2rayService(context).GenerateClientConfigContent();
+
+        await result.Success.Should().BeTrue();
+        var cfg = JsonUtils.Deserialize<V2rayConfig>(result.Data!.ToString())!;
+        var proxy = cfg.outbounds.First(o => o.tag == Global.ProxyTag);
+        await proxy.streamSettings!.sockopt!.dialMode.Should().BeEqualTo("code-1");
+        await (proxy.streamSettings.sockopt.dialerProxy ?? string.Empty).StartsWith("chain-proxy-1-", StringComparison.Ordinal).Should().BeTrue();
+    }
+
+    [Test]
     public async Task GenerateClientConfigContent_PolicyGroupWithProxyChain_ShouldBuildCombinedOutbounds()
     {
         var config = CoreConfigTestFactory.CreateConfig(ECoreType.Xray);

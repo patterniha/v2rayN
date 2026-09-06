@@ -94,6 +94,11 @@ public class BaseFmt
             dicQuery.Add("fm", Utils.UrlEncode(finalmask));
         }
 
+        if (item.DialMode.IsNotEmpty())
+        {
+            dicQuery.Add("dialMode", Utils.UrlEncode(item.DialMode));
+        }
+
         var network = item.GetNetwork();
         if (!Global.Networks.Contains(network))
         {
@@ -194,6 +199,10 @@ public class BaseFmt
         {
             dicQuery.Add("alpn", Utils.UrlEncode(item.Alpn));
         }
+        if (item.DialMode.IsNotEmpty())
+        {
+            dicQuery.Add("dialMode", Utils.UrlEncode(item.DialMode));
+        }
 
         return 0;
     }
@@ -214,6 +223,7 @@ public class BaseFmt
         item.EchConfigList = GetQueryDecoded(query, "ech");
         item.VerifyPeerCertByName = GetQueryDecoded(query, "vcn");
         item.CertSha = GetQueryDecoded(query, "pcs");
+        item.DialMode = GetQueryDecoded(query, "dialMode");
 
         var finalmaskDecoded = GetQueryDecoded(query, "fm");
         if (finalmaskDecoded.IsNotEmpty())

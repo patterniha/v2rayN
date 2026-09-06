@@ -1384,6 +1384,10 @@
                 </Grid>
 
                 <Grid x:Name="gridFinalmask" Grid.Row="5">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="300" />
                         <ColumnDefinition Width="Auto" />
@@ -1416,6 +1420,22 @@
                                 VerticalScrollBarVisibility="Auto" />
                         </StackPanel>
                     </materialDesign:PopupBox>
+
+                    <TextBlock
+                        Grid.Row="1"
+                        Grid.Column="0"
+                        Margin="{StaticResource Margin4}"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource ToolbarTextBlock}"
+                        Text="{x:Static resx:ResUI.TbDialMode}" />
+                    <TextBox
+                        x:Name="txtDialMode"
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Width="400"
+                        Margin="{StaticResource Margin4}"
+                        HorizontalAlignment="Left"
+                        Style="{StaticResource DefTextBox}" />
                 </Grid>
 
                 <Separator

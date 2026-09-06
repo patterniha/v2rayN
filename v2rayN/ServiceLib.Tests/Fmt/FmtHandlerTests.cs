@@ -115,6 +115,44 @@ public class FmtHandlerTests
     }
 
     [Test]
+    public async Task GetShareUriAndResolveConfig_Vless_ShouldRoundTripDialMode()
+    {
+        // dialMode is a sockopt option, so it has to travel even when the profile has no TLS.
+        var source = CreateVlessProfile();
+        source.DialMode = "code-1";
+
+        var resolved = await ExportThenImport(source);
+
+        await resolved.DialMode.Should().BeEqualTo(source.DialMode);
+        await AssertExportContains(source, "dialMode=code-1");
+    }
+
+    [Test]
+    public async Task GetShareUriAndResolveConfig_Vmess_ShouldRoundTripDialMode()
+    {
+        // VMess uses the QR-code JSON, which carries its own "dialMode" member.
+        var source = CreateVmessProfile();
+        source.DialMode = "code-1";
+
+        var resolved = await ExportThenImport(source);
+
+        await resolved.DialMode.Should().BeEqualTo(source.DialMode);
+    }
+
+    [Test]
+    public async Task GetShareUriAndResolveConfig_Hysteria2_ShouldRoundTripDialMode()
+    {
+        // Hysteria2 exports through the lite query, which must carry dialMode as well.
+        var source = CreateHysteria2Profile();
+        source.DialMode = "code-1";
+
+        var resolved = await ExportThenImport(source);
+
+        await resolved.DialMode.Should().BeEqualTo(source.DialMode);
+        await AssertExportContains(source, "dialMode=code-1");
+    }
+
+    [Test]
     public async Task GetShareUriAndResolveConfig_Shadowsocks_ShouldRoundTripBasicFields()
     {
         var source = CreateShadowsocksProfile();

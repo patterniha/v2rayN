@@ -278,6 +278,7 @@ public static class ConfigHandler
             item.Fingerprint = profileItem.Fingerprint;
             item.Alpn = profileItem.Alpn;
             item.CipherSuites = profileItem.CipherSuites;
+            item.DialMode = profileItem.DialMode;
 
             item.PublicKey = profileItem.PublicKey;
             item.ShortId = profileItem.ShortId;

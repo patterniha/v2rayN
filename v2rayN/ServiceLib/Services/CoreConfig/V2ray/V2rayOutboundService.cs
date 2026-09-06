@@ -345,6 +345,7 @@ public partial class CoreConfigV2rayService
     {
         try
         {
+            outbound.streamSettings ??= new();
             var streamSettings = outbound.streamSettings;
             var network = _node.GetNetwork();
             if (_node.ConfigType == EConfigType.Hysteria2)
@@ -352,6 +353,12 @@ public partial class CoreConfigV2rayService
                 network = "hysteria";
             }
             streamSettings.network = network;
+            if (_node.DialMode.IsNotEmpty())
+            {
+                // Only dialMode is set here so sockopt options added later (dialerProxy, domainStrategy, ...) are kept.
+                streamSettings.sockopt ??= new();
+                streamSettings.sockopt.dialMode = _node.DialMode;
+            }
             var transport = _node.GetTransportExtra();
             var host = string.Empty;
             var path = string.Empty;

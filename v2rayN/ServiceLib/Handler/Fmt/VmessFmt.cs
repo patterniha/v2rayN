@@ -69,7 +69,8 @@ public class VmessFmt : BaseFmt
             cs = item.CipherSuites,
             insecure = item.GetAllowInsecure() ? "1" : "0",
             vcn = item.VerifyPeerCertByName,
-            pcs = item.CertSha
+            pcs = item.CertSha,
+            dialMode = item.DialMode
         };
 
         var url = JsonUtils.Serialize(vmessQRCode);
@@ -147,6 +148,7 @@ public class VmessFmt : BaseFmt
         item.AllowInsecure = vmessQRCode.insecure == "1" ? Global.StringTrue : string.Empty;
         item.VerifyPeerCertByName = Utils.ToString(vmessQRCode.vcn);
         item.CertSha = Utils.ToString(vmessQRCode.pcs);
+        item.DialMode = Utils.ToString(vmessQRCode.dialMode);
 
         return item;
     }

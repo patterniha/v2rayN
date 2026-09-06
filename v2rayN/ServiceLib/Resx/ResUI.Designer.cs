@@ -2998,6 +2998,15 @@ namespace ServiceLib.Resx {
         }
         
         /// <summary>
+        ///   查找类似 dialMode 的本地化字符串。
+        /// </summary>
+        public static string TbDialMode {
+            get {
+                return ResourceManager.GetString("TbDialMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   查找类似 Direct Target Resolution Strategy 的本地化字符串。
         /// </summary>
         public static string TbDirectResolveStrategy {

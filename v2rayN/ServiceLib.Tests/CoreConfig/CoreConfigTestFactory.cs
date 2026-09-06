@@ -150,6 +150,34 @@ internal static class CoreConfigTestFactory
         };
     }
 
+    public static ProfileItem CreateWireguardNode(ECoreType coreType, string indexId = "node-wg-1",
+        string remarks = "demo-wg")
+    {
+        var node = new ProfileItem
+        {
+            IndexId = indexId,
+            ConfigType = EConfigType.WireGuard,
+            CoreType = coreType,
+            Remarks = remarks,
+            Address = "wg.example.com",
+            Port = 51820,
+            Password = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+            Network = nameof(ETransport.raw),
+            StreamSecurity = string.Empty,
+            Subid = string.Empty,
+        };
+
+        node.SetProtocolExtra(node.GetProtocolExtra() with
+        {
+            WgPublicKey = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+            WgReserved = "0,0,0",
+            WgInterfaceAddress = "172.16.0.2/32",
+            WgMtu = 1420,
+        });
+
+        return node;
+    }
+
     public static ProfileItem CreateCustomOutboundNode(ECoreType coreType, string indexId = "node-custom-1",
         string remarks = "demo-custom-outbound", string address = "custom_outbound.json")
     {
@@ -206,7 +234,7 @@ internal static class CoreConfigTestFactory
     }
 
     public static CoreConfigContext CreateContext(Config config, ProfileItem node, ECoreType runCoreType,
-        bool hasGlobalIPv6Address = true)
+        bool hasGlobalIPv6Address = true, FullConfigTemplateItem? fullConfigTemplate = null)
     {
         return new CoreConfigContext
         {
@@ -224,7 +252,7 @@ internal static class CoreConfigTestFactory
             RawDnsItem = null,
             SimpleDnsItem = config.SimpleDNSItem,
             AllProxiesMap = new Dictionary<string, ProfileItem> { [node.IndexId] = node },
-            FullConfigTemplate = null,
+            FullConfigTemplate = fullConfigTemplate,
             IsTunEnabled = config.TunModeItem.EnableTun,
             ProtectDomainList = [],
             HasGlobalIPv6Address = hasGlobalIPv6Address,

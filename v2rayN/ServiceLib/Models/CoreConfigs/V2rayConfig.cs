@@ -575,6 +575,8 @@ public class Sockopt4Ray
     public string? Interface { get; set; }
 
     public HappyEyeballs4Ray? happyEyeballs { get; set; }
+
+    public string? dialMode { get; set; }
 }
 
 public class HappyEyeballs4Ray

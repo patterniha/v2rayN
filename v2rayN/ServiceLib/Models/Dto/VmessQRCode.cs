@@ -46,4 +46,6 @@ public class VmessQRCode
     public string vcn { get; set; } = string.Empty;
 
     public string pcs { get; set; } = string.Empty;
+
+    public string dialMode { get; set; } = string.Empty;
 }

@@ -184,6 +184,7 @@ public class ProfileItem
     public string Sni { get; set; }
     public string Alpn { get; set; } = string.Empty;
     public string CipherSuites { get; set; } = string.Empty;
+    public string DialMode { get; set; } = string.Empty;
     public string Fingerprint { get; set; }
     public string PublicKey { get; set; }
     public string ShortId { get; set; }
